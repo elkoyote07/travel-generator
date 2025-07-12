@@ -57,7 +57,7 @@ Travel Generator suggests random travel destinations with real or simulated flig
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/travel-generator.git
+   git clone https://github.com/elkoyote07/travel-generator.git
    cd travel-generator
    ```
 
