@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import EntryAnimationGSAP from "@/components/EntryAnimationGSAP";
 
 export const metadata: Metadata = {
   title: "Travel Generator",
@@ -13,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <EntryAnimationGSAP>
+          {children}
+        </EntryAnimationGSAP>
+      </body>
     </html>
   );
 }

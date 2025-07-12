@@ -12,7 +12,6 @@ export interface FlightSearchParams {
   };
 }
 
-// Lista de destinos populares por región/clima
 const destinations = {
   europe: [
     { code: 'LHR', name: 'Londres Heathrow', country: 'Reino Unido' },
@@ -124,30 +123,24 @@ const destinations = {
   ],
 };
 
-// Función para generar URL de Skyscanner
 export function generateSkyscannerURL(params: FlightSearchParams, destinationCode: string): string {
   const { originAirport, dateRange } = params;
   
-  // Formatear fechas para Skyscanner (YYYY-MM-DD)
   const outboundDate = dateRange.startDate;
   const returnDate = dateRange.endDate;
   
-  // URL base de Skyscanner
   const baseURL = 'https://www.skyscanner.es/transport/flights';
   
-  // Construir la URL
   const url = `${baseURL}/${originAirport}/${destinationCode}/${outboundDate}/${returnDate}/`;
   
   return url;
 }
 
-// Función para seleccionar destino aleatorio basado en preferencias
 export function getRandomDestination(params: FlightSearchParams): { code: string; name: string; country: string } {
   const { preferences } = params;
   
   let destinationPool: typeof destinations.europe;
   
-  // Seleccionar pool de destinos basado en preferencias de clima
   switch (preferences.climate) {
     case 'warm':
       destinationPool = destinations.warm;
@@ -164,12 +157,10 @@ export function getRandomDestination(params: FlightSearchParams): { code: string
       break;
   }
   
-  // Seleccionar destino aleatorio
   const randomIndex = Math.floor(Math.random() * destinationPool.length);
   return destinationPool[randomIndex];
 }
 
-// Función para generar múltiples opciones de destinos
 export function generateMultipleDestinations(params: FlightSearchParams, count: number = 3): Array<{
   destination: { code: string; name: string; country: string };
   skyscannerURL: string;
@@ -181,7 +172,6 @@ export function generateMultipleDestinations(params: FlightSearchParams, count: 
     let destination;
     let attempts = 0;
     
-    // Evitar duplicados
     do {
       destination = getRandomDestination(params);
       attempts++;

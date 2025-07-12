@@ -24,10 +24,9 @@ export default function Alert({
     if (isVisible) {
       setIsAnimating(true);
       
-      // Auto-hide after duration
       const timer = setTimeout(() => {
         setIsAnimating(false);
-        setTimeout(onClose, 300); // Wait for animation to complete
+        setTimeout(onClose, 300);
       }, duration);
 
       return () => clearTimeout(timer);

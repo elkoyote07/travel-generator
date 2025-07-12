@@ -21,12 +21,10 @@ export default function LoadingAnimation({ isVisible }: LoadingAnimationProps) {
   useEffect(() => {
     if (!isVisible) return;
 
-    // Animar los puntos
     const dotsInterval = setInterval(() => {
       setDots(prev => prev.length >= 3 ? '' : prev + '.');
     }, 500);
 
-    // Cambiar de paso
     const stepInterval = setInterval(() => {
       setCurrentStep(prev => (prev + 1) % steps.length);
     }, 2000);

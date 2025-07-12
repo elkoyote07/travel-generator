@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { Plane, MapPin, Settings, AlertCircle } from "lucide-react";
 import { generateMultipleDestinations, FlightSearchParams } from "@/utils/flightSearch";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { AnimatedButton, AnimatedCard } from "@/components/AdvancedEffects";
+import ParticleBackground from "@/components/ParticleBackground";
+import SoundEffects, { useSoundEffects } from "@/components/SoundEffects";
 
 export default function Home() {
   const router = useRouter();
+  const { playClickSound, playSuccessSound } = useSoundEffects();
   const [originAirport, setOriginAirport] = useState("");
   const [maxFlights, setMaxFlights] = useState(2);
   const [preferences, setPreferences] = useState({
@@ -34,6 +38,8 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleGenerateTrip = async () => {
+    playClickSound();
+    
     if (!originAirport || !departureDate) {
       setErrorMessage("Please fill in the origin airport and departure date");
       return;
@@ -88,11 +94,11 @@ export default function Home() {
       const mode = data.mode;
       const description = data.description;
 
-      // Navigate to results page with data
       const resultsParam = encodeURIComponent(JSON.stringify(results));
       const modeParam = mode || "";
       const descriptionParam = description || "";
       
+      playSuccessSound();
       router.push(`/results?results=${resultsParam}&mode=${modeParam}&description=${descriptionParam}`);
     } catch (error) {
       setErrorMessage("Error generating trip. Please try again.");
@@ -102,7 +108,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+      <ParticleBackground />
+      <SoundEffects />
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -132,7 +140,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <AnimatedCard className="mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div>
@@ -279,15 +287,14 @@ export default function Home() {
                 <span className="text-sm font-medium">{errorMessage}</span>
               </div>
             )}
-            <button
+            <AnimatedButton
               onClick={handleGenerateTrip}
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               disabled={isLoading}
             >
               Search
-            </button>
+            </AnimatedButton>
           </div>
-        </div>
+        </AnimatedCard>
 
         {isLoading && <LoadingAnimation isVisible={isLoading} />}
       </main>
