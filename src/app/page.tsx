@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { Plane, MapPin, Settings, Search, Globe, Calendar } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plane, MapPin, Settings, AlertCircle } from "lucide-react";
 import { generateMultipleDestinations, FlightSearchParams } from "@/utils/flightSearch";
-
-import SearchResults from "@/components/SearchResults";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
 export default function Home() {
-  const t = useTranslations();
+  const router = useRouter();
   const [originAirport, setOriginAirport] = useState("");
   const [maxFlights, setMaxFlights] = useState(2);
   const [preferences, setPreferences] = useState({
@@ -32,37 +30,18 @@ export default function Home() {
     { code: "LPA", name: "Gran Canaria", city: "Las Palmas" },
   ];
 
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentMode, setCurrentMode] = useState<string>("");
-  const [currentDescription, setCurrentDescription] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleGenerateTrip = async () => {
-    console.log(`\n🎯 [FRONTEND] Iniciando generación de viaje`);
-    console.log(`📅 [FRONTEND] Timestamp: ${new Date().toISOString()}`);
-
     if (!originAirport || !departureDate) {
-      console.log(`❌ [FRONTEND] Error: Campos requeridos incompletos`);
-      console.log(`   Aeropuerto origen: ${originAirport || "NO DEFINIDO"}`);
-      console.log(`   Fecha salida: ${departureDate || "NO DEFINIDA"}`);
-      alert(t("error_required"));
+      setErrorMessage("Please fill in the origin airport and departure date");
       return;
     }
-
-    console.log(`✅ [FRONTEND] Validación de campos exitosa`);
-    console.log(`🛫 [FRONTEND] Aeropuerto origen: ${originAirport}`);
-    console.log(`📅 [FRONTEND] Fecha salida: ${departureDate}`);
-    console.log(`⚙️ [FRONTEND] Configuración:`);
-    console.log(`   - Máximo vuelos: ${maxFlights}`);
-    console.log(`   - Presupuesto: ${preferences.budget}`);
-    console.log(`   - Clima: ${preferences.climate}`);
-    console.log(`   - Duración: ${preferences.duration}`);
 
     setIsLoading(true);
 
     try {
-      // Calcular fecha de regreso basada en la duración seleccionada
       const startDate = new Date(departureDate);
       let endDate = new Date(startDate);
 
@@ -73,19 +52,8 @@ export default function Home() {
       } else if (preferences.duration === "21") {
         endDate.setDate(startDate.getDate() + 21);
       } else {
-        // Para 'any', usar 7 días por defecto
         endDate.setDate(startDate.getDate() + 7);
       }
-
-      console.log(`📅 [FRONTEND] Fechas calculadas:`);
-      console.log(`   - Salida: ${startDate.toISOString().split("T")[0]}`);
-      console.log(`   - Regreso: ${endDate.toISOString().split("T")[0]}`);
-      console.log(
-        `   - Duración: ${Math.round(
-          (endDate.getTime() - startDate.getTime()) /
-            (1000 * 60 * 60 * 24)
-        )} días`
-      );
 
       const searchParams: FlightSearchParams = {
         originAirport,
@@ -97,19 +65,7 @@ export default function Home() {
         },
       };
 
-      console.log(`🎲 [FRONTEND] Generando destinos aleatorios...`);
-      // Generar 3 destinos aleatorios
       const destinations = generateMultipleDestinations(searchParams, 3);
-
-      console.log(`🎯 [FRONTEND] Destinos generados:`);
-      destinations.forEach((dest, index) => {
-        console.log(
-          `   ${index + 1}. ${dest.destination.code} (${dest.destination.name}, ${dest.destination.country})`
-        );
-      });
-
-      console.log(`🌐 [FRONTEND] Enviando petición a API...`);
-      // Obtener precios para cada destino usando la API
       const response = await fetch("/api/flights", {
         method: "POST",
         headers: {
@@ -124,52 +80,29 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        console.error(
-          `❌ [FRONTEND] Error en respuesta de API: ${response.status} ${response.statusText}`
-        );
-        throw new Error("Error al obtener precios de vuelos");
+        throw new Error("Error fetching flight prices");
       }
 
-      console.log(`✅ [FRONTEND] Respuesta de API recibida exitosamente`);
       const data = await response.json();
       const results = data.results;
       const mode = data.mode;
       const description = data.description;
 
-      console.log(`📊 [FRONTEND] Resultados procesados:`);
-      console.log(`   - Total destinos: ${results.length}`);
-      results.forEach((result: any, index: number) => {
-        const price = result.skyscanner?.price || "N/A";
-        const airline = result.skyscanner?.airline || "N/A";
-        console.log(
-          `   ${index + 1}. ${result.destination.code}: ${price} (${airline})`
-        );
-      });
-
-      setSearchResults(results);
-      setCurrentMode(mode || "");
-      setCurrentDescription(description || "");
-      setShowResults(true);
-
-      // Guardar información del modo para mostrarla en los resultados
-      if (mode && description) {
-        console.log(
-          `🎯 [FRONTEND] Modo utilizado: ${mode.toUpperCase()} - ${description}`
-        );
-      }
-      console.log(`✅ [FRONTEND] Viaje generado exitosamente`);
+      // Navigate to results page with data
+      const resultsParam = encodeURIComponent(JSON.stringify(results));
+      const modeParam = mode || "";
+      const descriptionParam = description || "";
+      
+      router.push(`/results?results=${resultsParam}&mode=${modeParam}&description=${descriptionParam}`);
     } catch (error) {
-      console.error(`❌ [FRONTEND] Error generando viaje:`, error);
-      alert(t("error_generate"));
+      setErrorMessage("Error generating trip. Please try again.");
     } finally {
       setIsLoading(false);
-      console.log(`🏁 [FRONTEND] Proceso completado`);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -177,37 +110,34 @@ export default function Home() {
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
                 <Plane className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Travel Generator</h1>
             </div>
             <div className="flex items-center space-x-4">
               <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                 <Settings className="h-5 w-5" />
-                <span>{t("config")}</span>
+                <span>Config</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            {t("discover")}
+            Discover destinations
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {t("subtitle")}
+            Discover your next adventure
           </p>
         </div>
 
-        {/* Main Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Basic Settings */}
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("origin_airport")}
+                  Origin airport
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -215,13 +145,13 @@ export default function Home() {
                     type="text"
                     value={originAirport}
                     onChange={(e) => setOriginAirport(e.target.value.toUpperCase())}
-                    placeholder="Ej: MAD, BCN, AGP..."
+                    placeholder="E.g.: MAD, BCN, AGP..."
                     maxLength={3}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase tracking-wider"
                   />
                 </div>
                 <div className="mt-2">
-                  <p className="text-xs text-gray-500 mb-2">{t("popular_airports")}</p>
+                  <p className="text-xs text-gray-500 mb-2">Popular airports:</p>
                   <div className="flex flex-wrap gap-2">
                     {airports.map((airport) => (
                       <button
@@ -242,7 +172,7 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("max_flights")}
+                  Max flights
                 </label>
                 <div className="flex items-center space-x-4">
                   <input
@@ -258,32 +188,29 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>1 vuelo</span>
-                  <span>5 vuelos</span>
+                  <span>1 flight</span>
+                  <span>5 flights</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Column - Preferences */}
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("budget")}
+                  Budget
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {["low", "medium", "high"].map((budget) => (
                     <button
                       key={budget}
-                      onClick={() => setPreferences({ ...preferences, budget })}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                      onClick={() => setPreferences((p) => ({ ...p, budget }))}
+                      className={`py-3 px-4 rounded-lg border transition-colors ${
                         preferences.budget === budget
-                          ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          ? "bg-blue-100 text-blue-700 border-blue-300"
+                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
                       }`}
                     >
-                      {budget === "low" && t("budget_low")}
-                      {budget === "medium" && t("budget_medium")}
-                      {budget === "high" && t("budget_high")}
+                      {budget.charAt(0).toUpperCase() + budget.slice(1)}
                     </button>
                   ))}
                 </div>
@@ -291,48 +218,20 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("preferred_climate")}
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: "any", label: t("climate_any") },
-                    { value: "warm", label: t("climate_warm") },
-                    { value: "cold", label: t("climate_cold") },
-                    { value: "tropical", label: t("climate_tropical") },
-                  ].map((climate) => (
-                    <button
-                      key={climate.value}
-                      onClick={() => setPreferences({ ...preferences, climate: climate.value })}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                        preferences.climate === climate.value
-                          ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {climate.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("trip_duration")}
+                  Climate
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {["7", "14", "21"].map((duration) => (
+                  {["any", "warm", "cold"].map((climate) => (
                     <button
-                      key={duration}
-                      onClick={() => setPreferences({ ...preferences, duration })}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                        preferences.duration === duration
-                          ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      key={climate}
+                      onClick={() => setPreferences((p) => ({ ...p, climate }))}
+                      className={`py-3 px-4 rounded-lg border transition-colors ${
+                        preferences.climate === climate
+                          ? "bg-blue-100 text-blue-700 border-blue-300"
+                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
                       }`}
                     >
-                      {duration === "7" && t("duration_7")}
-                      {duration === "14" && t("duration_14")}
-                      {duration === "21" && t("duration_21")}
+                      {climate.charAt(0).toUpperCase() + climate.slice(1)}
                     </button>
                   ))}
                 </div>
@@ -340,36 +239,57 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("departure_date")}
+                  Duration
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {["any", "7", "14", "21"].map((duration) => (
+                    <button
+                      key={duration}
+                      onClick={() => setPreferences((p) => ({ ...p, duration }))}
+                      className={`py-3 px-4 rounded-lg border transition-colors ${
+                        preferences.duration === duration
+                          ? "bg-blue-100 text-blue-700 border-blue-300"
+                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                      }`}
+                    >
+                      {duration === "any" ? "Any" : `${duration} days`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Departure date
                 </label>
                 <input
                   type="date"
                   value={departureDate}
                   onChange={(e) => setDepartureDate(e.target.value)}
-                  className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="mt-8 flex flex-col items-end space-y-4">
+            {errorMessage && (
+              <div className="flex items-center space-x-2 text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">{errorMessage}</span>
+              </div>
+            )}
             <button
               onClick={handleGenerateTrip}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-10 rounded-xl text-lg shadow-lg transition-colors duration-200"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              disabled={isLoading}
             >
-              {isLoading ? t("loading") : t("generate_trip")}
+              Search
             </button>
           </div>
         </div>
 
-        {/* Results Section */}
-        {showResults && (
-          <SearchResults
-            results={searchResults}
-            mode={currentMode}
-            description={currentDescription}
-          />
-        )}
+        {isLoading && <LoadingAnimation isVisible={isLoading} />}
       </main>
     </div>
   );

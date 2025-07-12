@@ -40,7 +40,6 @@ export function getCurrentMode(): FlightMode {
     case 'hybrid':
       return 'hybrid';
     default:
-      console.log(`⚠️ [CONFIG] Modo '${mode}' no reconocido, usando 'mock' por defecto`);
       return 'mock';
   }
 }
@@ -63,24 +62,5 @@ export function getLogConfig() {
 }
 
 export function printCurrentConfig() {
-  const mode = getCurrentMode();
-  const logConfig = getLogConfig();
-  console.log(`\n⚙️ [CONFIG] Configuración actual:`);
-  console.log(`   🎯 Modo principal: ${mode.toUpperCase()}`);
-  console.log(`   📝 Logging: ${logConfig.enabled ? 'HABILITADO' : 'DESHABILITADO'}`);
-  console.log(`   🔗 URLs en logs: ${logConfig.showUrls ? 'SÍ' : 'NO'}`);
-  console.log(`   💰 Precios en logs: ${logConfig.showPrices ? 'SÍ' : 'NO'}`);
-  if (mode === 'apis' || mode === 'hybrid') {
-    console.log(`   🔌 APIs configuradas:`);
-    console.log(`      - Aviation Stack: ${FLIGHT_CONFIG.APIS.AVIATION_STACK.enabled ? '✅' : '❌'}`);
-    console.log(`      - Amadeus: ${FLIGHT_CONFIG.APIS.AMADEUS.enabled ? '✅' : '❌'}`);
-    console.log(`      - Kiwi: ${FLIGHT_CONFIG.APIS.KIWI.enabled ? '✅' : '❌'}`);
-  }
-  if (mode === 'scraper' || mode === 'hybrid') {
-    console.log(`   🕷️ Scraping: ${FLIGHT_CONFIG.SCRAPING.enabled ? '✅' : '❌'}`);
-  }
-  if (mode === 'mock' || mode === 'hybrid') {
-    console.log(`   🎲 Mock: ${FLIGHT_CONFIG.MOCK.enabled ? '✅' : '❌'}`);
-  }
-  console.log('');
+  // Función vacía para mantener compatibilidad
 } 

@@ -12,10 +12,10 @@ export default function LoadingAnimation({ isVisible }: LoadingAnimationProps) {
   const [dots, setDots] = useState('');
 
   const steps = [
-    { icon: Search, text: 'Buscando destinos increíbles' },
-    { icon: Plane, text: 'Calculando rutas de vuelo' },
-    { icon: Globe, text: 'Consultando precios en tiempo real' },
-    { icon: Zap, text: '¡Casi listo!' }
+    { icon: Search, text: 'Searching for amazing destinations' },
+    { icon: Plane, text: 'Calculating flight routes' },
+    { icon: Globe, text: 'Checking real-time prices' },
+    { icon: Zap, text: 'Almost ready!' }
   ];
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function LoadingAnimation({ isVisible }: LoadingAnimationProps) {
   const CurrentIcon = steps[currentStep].icon;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-white flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
         {/* Animación del avión */}
         <div className="relative mb-6">
@@ -83,12 +83,12 @@ export default function LoadingAnimation({ isVisible }: LoadingAnimationProps) {
           ></div>
         </div>
 
-        {/* Mensajes divertidos */}
+        {/* Fun messages */}
         <div className="text-sm text-gray-600">
-          {currentStep === 0 && "🌍 Explorando el mundo..."}
-          {currentStep === 1 && "✈️ Encontrando las mejores rutas..."}
-          {currentStep === 2 && "💰 Buscando las mejores ofertas..."}
-          {currentStep === 3 && "🎉 ¡Preparando tu aventura!"}
+          {currentStep === 0 && "🌍 Exploring the world..."}
+          {currentStep === 1 && "✈️ Finding the best routes..."}
+          {currentStep === 2 && "💰 Looking for the best deals..."}
+          {currentStep === 3 && "🎉 Preparing your adventure!"}
         </div>
 
         {/* Iconos flotantes */}

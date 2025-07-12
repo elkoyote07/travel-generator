@@ -51,7 +51,7 @@ export default function SearchResults({ results, mode, description }: SearchResu
       case 'kiwi':
         return 'Kiwi.com';
       case 'simulated':
-        return 'Simulado';
+        return 'Simulated';
       default:
         return source;
     }
@@ -61,10 +61,10 @@ export default function SearchResults({ results, mode, description }: SearchResu
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Destinos Encontrados
+          Search Results
         </h2>
         <p className="text-gray-600">
-          Aquí tienes {results.length} destinos increíbles para tu próximo viaje
+          Found {results.length} destinations for your search
         </p>
       </div>
 
@@ -74,7 +74,6 @@ export default function SearchResults({ results, mode, description }: SearchResu
             key={index}
             className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
           >
-            {/* Header del destino */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -88,7 +87,6 @@ export default function SearchResults({ results, mode, description }: SearchResu
               </div>
             </div>
 
-            {/* Información de precios */}
             <div className="p-4">
               {result.skyscanner && (
                 <div className="mb-4">
@@ -117,14 +115,13 @@ export default function SearchResults({ results, mode, description }: SearchResu
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    <span>Ver Vuelos</span>
+                    <span>View Flights</span>
                   </a>
                 </div>
               )}
 
-              {/* Enlaces adicionales */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Más opciones de búsqueda:</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">More options</h4>
                 
                 {result.googleFlights && (
                   <a
@@ -156,7 +153,6 @@ export default function SearchResults({ results, mode, description }: SearchResu
                   </a>
                 )}
 
-                {/* Enlaces adicionales a otros sitios */}
                 <a
                   href={`https://www.momondo.es/flights/${result.destination.code}`}
                   target="_blank"
@@ -201,22 +197,20 @@ export default function SearchResults({ results, mode, description }: SearchResu
         ))}
       </div>
 
-      {/* Información adicional */}
       <div className="bg-blue-50 rounded-lg p-4 mt-6">
         <div className="flex items-start space-x-3">
           <div className="bg-blue-100 p-2 rounded-lg">
             <Plane className="h-5 w-5 text-blue-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900 mb-1">Información sobre los precios</h3>
+            <h3 className="font-semibold text-blue-900 mb-1">Information about prices</h3>
             <p className="text-blue-800 text-sm">
-              Los precios mostrados pueden ser simulados o reales dependiendo de la disponibilidad de las APIs. 
-              Siempre recomendamos verificar los precios actuales en los enlaces proporcionados antes de realizar cualquier reserva.
+              Prices are based on the current mode and description.
             </p>
             {mode && (
               <div className="mt-2 p-2 bg-blue-100 rounded">
                 <p className="text-blue-800 text-xs">
-                  <strong>Modo actual:</strong> {mode.toUpperCase()} - {description}
+                  <strong>Current Mode:</strong> {mode.toUpperCase()} - {description}
                 </p>
               </div>
             )}

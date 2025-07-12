@@ -28,50 +28,30 @@ export async function getFlightPrices(
 ): Promise<ScrapedFlightData[]> {
   printCurrentConfig();
   const mode = getCurrentMode();
-  const logConfig = getLogConfig();
-  console.log(`\n🚀 [UNIFIED] Iniciando búsqueda en modo: ${mode.toUpperCase()}`);
-  console.log(`📍 [UNIFIED] Origen: ${origin}`);
-  console.log(`🎯 [UNIFIED] Destinos: ${destinations.length}`);
-  console.log(`📅 [UNIFIED] Fechas: ${startDate} → ${endDate}`);
+
   try {
     let results: ScrapedFlightData[] = [];
+
     switch (mode) {
       case 'mock':
-        console.log(`🎲 [UNIFIED] Usando modo MOCK`);
         results = await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
         break;
       case 'scraper':
-        console.log(`🕷️ [UNIFIED] Usando modo SCRAPER`);
         results = await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
         break;
       case 'apis':
-        console.log(`🔌 [UNIFIED] Usando modo APIS`);
         results = await getMultipleFlightPricesWithAPIs(origin, destinations, startDate, endDate);
         break;
       case 'hybrid':
-        console.log(`🔄 [UNIFIED] Usando modo HIBRIDO`);
         results = await getHybridFlightPrices(origin, destinations, startDate, endDate);
         break;
       default:
-        console.log(`⚠️ [UNIFIED] Modo no reconocido, usando MOCK por defecto`);
         results = await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
+        break;
     }
-    if (logConfig.enabled) {
-      console.log(`\n📊 [UNIFIED] Resultados obtenidos:`);
-      console.log(`   ✅ Total destinos: ${results.length}`);
-      if (logConfig.showPrices) {
-        results.forEach((result, index) => {
-          const price = result.skyscanner?.price || 'N/A';
-          const airline = result.skyscanner?.airline || 'N/A';
-          const source = result.skyscanner?.source || 'N/A';
-          console.log(`   ${index + 1}. ${result.destination.code}: ${price} (${airline}) [${source}]`);
-        });
-      }
-    }
+
     return results;
   } catch (error) {
-    console.error(`❌ [UNIFIED] Error en búsqueda:`, error);
-    console.log(`🔄 [UNIFIED] Usando fallback a MOCK`);
     return await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
   }
 }
@@ -82,34 +62,33 @@ async function getHybridFlightPrices(
   startDate: string,
   endDate: string
 ): Promise<ScrapedFlightData[]> {
-  console.log(`🔄 [HYBRID] Iniciando búsqueda híbrida`);
-  if (isModeEnabled('apis')) {
-    try {
-      console.log(`🔌 [HYBRID] Intentando APIs...`);
-      const apiResults = await getMultipleFlightPricesWithAPIs(origin, destinations, startDate, endDate);
-      const realPrices = apiResults.filter(r => r.skyscanner && r.skyscanner.source !== 'simulated');
-      if (realPrices.length > 0) {
-        console.log(`✅ [HYBRID] APIs exitosas, usando resultados de APIs`);
-        return apiResults;
-      } else {
-        console.log(`⚠️ [HYBRID] APIs no obtuvieron precios reales`);
-      }
-    } catch (error) {
-      console.log(`❌ [HYBRID] Error en APIs:`, error);
+  try {
+    const apiResults = await getMultipleFlightPricesWithAPIs(origin, destinations, startDate, endDate);
+    
+    const hasRealPrices = apiResults.some(result => 
+      result.skyscanner?.price !== 'N/A' && 
+      result.skyscanner?.price !== 'Consultar'
+    );
+
+    if (hasRealPrices) {
+      return apiResults;
     }
-  }
-  if (isModeEnabled('scraper')) {
-    try {
-      console.log(`🕷️ [HYBRID] Intentando scraper...`);
-      const scraperResults = await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
-      console.log(`✅ [HYBRID] Scraper exitoso`);
+
+    const scraperResults = await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
+    
+    const hasScraperPrices = scraperResults.some(result => 
+      result.skyscanner?.price !== 'N/A' && 
+      result.skyscanner?.price !== 'Consultar'
+    );
+
+    if (hasScraperPrices) {
       return scraperResults;
-    } catch (error) {
-      console.log(`❌ [HYBRID] Error en scraper:`, error);
     }
+
+    return await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
+  } catch (error) {
+    return await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
   }
-  console.log(`🎲 [HYBRID] Usando fallback a MOCK`);
-  return await getMultipleFlightPricesSimple(origin, destinations, startDate, endDate);
 }
 
 export function getModeInfo() {

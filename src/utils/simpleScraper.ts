@@ -20,7 +20,6 @@ export interface ScrapedFlightData {
 function generateSkyscannerURL(origin: string, destination: string, startDate: string, endDate: string): string {
   // URL más simple y directa para Skyscanner
   const url = `https://www.skyscanner.es/transport/flights/${origin}/${destination}/${startDate}/${endDate}/`;
-  console.log(`🔗 [SKYSCANNER] URL generada: ${url}`);
   return url;
 }
 
@@ -28,21 +27,17 @@ function generateSkyscannerURL(origin: string, destination: string, startDate: s
 function generateGoogleFlightsURL(origin: string, destination: string, startDate: string, endDate: string): string {
   // URL más simple para Google Flights usando parámetros básicos
   const url = `https://www.google.com/travel/flights?hl=es&f=0&t=0&q=Flights%20from%20${origin}%20to%20${destination}`;
-  console.log(`🔗 [GOOGLE FLIGHTS] URL generada: ${url}`);
   return url;
 }
 
 // Función para generar URL de Kayak
 function generateKayakURL(origin: string, destination: string, startDate: string, endDate: string): string {
   const url = `https://www.kayak.es/flights/${origin}-${destination}/${startDate}/${endDate}`;
-  console.log(`🔗 [KAYAK] URL generada: ${url}`);
   return url;
 }
 
 // Función para generar precios simulados pero realistas
 function generateRealisticPrice(destination: string, origin: string, startDate: string, endDate: string): FlightPrice {
-  console.log(`💰 [PRECIOS] Generando precio para: ${origin} → ${destination} (${startDate} - ${endDate})`);
-  
   // Precios base por región
   const basePrices: { [key: string]: number } = {
     // Europa
@@ -75,17 +70,14 @@ function generateRealisticPrice(destination: string, origin: string, startDate: 
 
   // Obtener precio base o usar uno por defecto
   const basePrice = basePrices[destination] || 200;
-  console.log(`💰 [PRECIOS] Precio base para ${destination}: €${basePrice}`);
   
   // Añadir variabilidad (±20%)
   const variation = (Math.random() - 0.5) * 0.4; // ±20%
   const finalPrice = Math.round(basePrice * (1 + variation));
-  console.log(`💰 [PRECIOS] Variación aplicada: ${(variation * 100).toFixed(1)}% → Precio final: €${finalPrice}`);
   
   // Aerolíneas comunes
   const airlines = ['Iberia', 'Ryanair', 'Vueling', 'Air Europa', 'British Airways', 'Lufthansa', 'Air France'];
   const randomAirline = airlines[Math.floor(Math.random() * airlines.length)];
-  console.log(`✈️ [AEROLÍNEA] Seleccionada: ${randomAirline}`);
 
   const result = {
     price: `€${finalPrice}`,
@@ -93,12 +85,6 @@ function generateRealisticPrice(destination: string, origin: string, startDate: 
     url: generateSkyscannerURL(origin, destination, startDate, endDate),
     source: 'skyscanner' as const
   };
-
-  console.log(`✅ [PRECIOS] Resultado generado:`, {
-    precio: result.price,
-    aerolínea: result.airline,
-    fuente: result.source
-  });
 
   return result;
 }
@@ -110,19 +96,13 @@ export async function getFlightPricesSimple(
   startDate: string, 
   endDate: string
 ): Promise<ScrapedFlightData> {
-  console.log(`\n🚀 [SCRAPER] Iniciando búsqueda de precios para ${origin} → ${destination}`);
-  console.log(`📅 [FECHAS] Salida: ${startDate} | Regreso: ${endDate}`);
-  
   try {
     // Simular delay realista
     const delay = 1000 + Math.random() * 2000;
-    console.log(`⏱️ [SCRAPER] Simulando delay de ${Math.round(delay)}ms...`);
     await new Promise(resolve => setTimeout(resolve, delay));
     
-    console.log(`🔍 [SKYSCANNER] Obteniendo precio de Skyscanner...`);
     const skyscannerPrice = generateRealisticPrice(destination, origin, startDate, endDate);
     
-    console.log(`🔍 [GOOGLE FLIGHTS] Generando enlace de Google Flights...`);
     const googleFlightsPrice = {
       price: 'Ver precios',
       airline: 'Google Flights',
@@ -130,7 +110,6 @@ export async function getFlightPricesSimple(
       source: 'google' as const
     };
 
-    console.log(`🔍 [KAYAK] Generando enlace de Kayak...`);
     const kayakPrice = {
       price: 'Ver precios',
       airline: 'Kayak',
@@ -148,15 +127,9 @@ export async function getFlightPricesSimple(
       googleFlights: googleFlightsPrice,
       kayak: kayakPrice
     };
-
-    console.log(`✅ [SCRAPER] Búsqueda completada para ${destination}:`);
-    console.log(`   📊 Skyscanner: ${skyscannerPrice.price} (${skyscannerPrice.airline})`);
-    console.log(`   📊 Google Flights: ${googleFlightsPrice.price}`);
-    console.log(`   📊 Kayak: ${kayakPrice.price}`);
     
     return result;
   } catch (error) {
-    console.error(`❌ [SCRAPER] Error obteniendo precios para ${destination}:`, error);
     return {
       destination: {
         code: destination,
@@ -177,37 +150,15 @@ export async function getMultipleFlightPricesSimple(
   startDate: string,
   endDate: string
 ): Promise<ScrapedFlightData[]> {
-  console.log(`\n🎯 [MULTI-SCRAPER] Iniciando búsqueda múltiple`);
-  console.log(`📍 [ORIGEN] ${origin}`);
-  console.log(`🎯 [DESTINOS] ${destinations.length} destinos a procesar:`);
-  destinations.forEach((dest, index) => {
-    console.log(`   ${index + 1}. ${dest.code} (${dest.name}, ${dest.country})`);
-  });
-  console.log(`📅 [FECHAS] ${startDate} → ${endDate}`);
-  
   const results: ScrapedFlightData[] = [];
   
   for (let i = 0; i < destinations.length; i++) {
     const destination = destinations[i];
-    console.log(`\n🔄 [PROCESO] ${i + 1}/${destinations.length} - Procesando ${destination.code}...`);
     
     const flightData = await getFlightPricesSimple(origin, destination.code, startDate, endDate);
     flightData.destination = destination;
     results.push(flightData);
-    
-    console.log(`✅ [PROCESO] ${destination.code} completado`);
   }
-  
-  console.log(`\n🎉 [MULTI-SCRAPER] Búsqueda múltiple completada`);
-  console.log(`📊 [RESUMEN] ${results.length} destinos procesados exitosamente`);
-  
-  // Resumen de precios
-  console.log(`\n💰 [RESUMEN DE PRECIOS]`);
-  results.forEach((result, index) => {
-    const price = result.skyscanner?.price || 'N/A';
-    const airline = result.skyscanner?.airline || 'N/A';
-    console.log(`   ${index + 1}. ${result.destination.code}: ${price} (${airline})`);
-  });
   
   return results;
 } 

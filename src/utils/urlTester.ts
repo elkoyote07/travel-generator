@@ -1,12 +1,13 @@
 // Función para probar URLs de Skyscanner y Google Flights
-export function testURLs(origin: string, destination: string, startDate: string, endDate: string) {
-  const skyscannerURL = `https://www.skyscanner.es/transport/flights/${origin}/${destination}/${startDate}/${endDate}/`;
-  const googleFlightsURL = `https://www.google.com/travel/flights?hl=es&f=0&t=0&q=Flights%20from%20${origin}%20to%20${destination}`;
-  
-  console.log('URLs generadas:');
-  console.log('Skyscanner:', skyscannerURL);
-  console.log('Google Flights:', googleFlightsURL);
-  
+export function testURLs() {
+  const origin = 'MAD';
+  const destination = 'BCN';
+  const startDate = '2024-03-15';
+  const endDate = '2024-03-20';
+
+  const skyscannerURL = `https://www.skyscanner.es/transport/flights/${origin}/${destination}/${startDate}/${endDate}/?adults=1&children=0&adultsv2=1&childrenv2=&infants=0&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false&ref=home`;
+  const googleFlightsURL = `https://www.google.com/travel/flights?hl=es&tfs=${origin}_${destination}_${startDate}&tfs=${destination}_${origin}_${endDate}&curr=EUR`;
+
   return {
     skyscanner: skyscannerURL,
     googleFlights: googleFlightsURL

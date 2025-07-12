@@ -31,22 +31,18 @@ export async function getFlightPricesSmart(
   try {
     // Intentar primero con el scraper real (más rápido)
     if (SCRAPER_CONFIG.useRealScraper) {
-      console.log('Intentando con scraper real...');
       results = await getMultipleFlightPricesReal(origin, destinations, startDate, endDate);
       
       // Verificar si obtuvimos resultados válidos
       const validResults = results.filter(r => r.skyscanner && r.skyscanner.price !== 'Ver precios');
       
       if (validResults.length > 0) {
-        console.log(`Scraper real exitoso: ${validResults.length} destinos con precios`);
         return results;
       }
     }
     
     // Si el scraper real falló y tenemos Puppeteer habilitado, intentar con él
     if (SCRAPER_CONFIG.usePuppeteerAsBackup) {
-      console.log('Scraper real falló, intentando con Puppeteer...');
-      
       // Esperar un poco antes de intentar con Puppeteer
       await new Promise(resolve => setTimeout(resolve, SCRAPER_CONFIG.delayBetweenRequests));
       
@@ -55,13 +51,11 @@ export async function getFlightPricesSmart(
       const validResults = results.filter(r => r.skyscanner && r.skyscanner.price !== 'Ver precios');
       
       if (validResults.length > 0) {
-        console.log(`Puppeteer exitoso: ${validResults.length} destinos con precios`);
         return results;
       }
     }
     
     // Si ambos fallaron, devolver resultados con enlaces pero sin precios
-    console.log('Ambos scrapers fallaron, devolviendo enlaces sin precios');
     return results.map(result => ({
       ...result,
       skyscanner: result.skyscanner || {
@@ -79,7 +73,6 @@ export async function getFlightPricesSmart(
     }));
     
   } catch (error) {
-    console.error('Error en scraper inteligente:', error);
     
     // En caso de error total, devolver estructura básica
     return destinations.map(destination => ({
@@ -112,35 +105,29 @@ export async function getFlightPricesWithRetry(
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Intento ${attempt} de ${maxRetries}`);
       const results = await getFlightPricesSmart(origin, destinations, startDate, endDate);
       
       // Verificar si obtuvimos resultados válidos
       const validResults = results.filter(r => r.skyscanner && r.skyscanner.price !== 'Error al obtener precio' && r.skyscanner.price !== 'Precio no disponible');
       
       if (validResults.length > 0) {
-        console.log(`Éxito en intento ${attempt}: ${validResults.length} destinos con precios`);
         return results;
       }
       
       if (attempt < maxRetries) {
-        console.log(`Intento ${attempt} falló, esperando antes del siguiente...`);
         await new Promise(resolve => setTimeout(resolve, SCRAPER_CONFIG.delayBetweenRequests * 2));
       }
       
     } catch (error) {
       lastError = error as Error;
-      console.error(`Error en intento ${attempt}:`, error);
       
       if (attempt < maxRetries) {
-        console.log(`Esperando antes del siguiente intento...`);
         await new Promise(resolve => setTimeout(resolve, SCRAPER_CONFIG.delayBetweenRequests * 2));
       }
     }
   }
   
   // Si todos los intentos fallaron, devolver resultados básicos
-  console.log('Todos los intentos fallaron, devolviendo resultados básicos');
   return destinations.map(destination => ({
     destination,
     skyscanner: {

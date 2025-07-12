@@ -39,7 +39,7 @@ async function getAviationStackPrices(origin: string, destination: string): Prom
       }
     }
   } catch (error) {
-    console.log(`❌ [AVIATION STACK] Error: ${error}`);
+    return null;
   }
   return null;
 }
@@ -52,7 +52,6 @@ async function getAmadeusPrices(origin: string, destination: string, startDate: 
     const CLIENT_SECRET = process.env.AMADEUS_CLIENT_SECRET;
     
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      console.log(`⚠️ [AMADEUS] API keys no configuradas`);
       return null;
     }
 
@@ -92,7 +91,7 @@ async function getAmadeusPrices(origin: string, destination: string, startDate: 
       }
     }
   } catch (error) {
-    console.log(`❌ [AMADEUS] Error: ${error}`);
+    return null;
   }
   return null;
 }
@@ -122,7 +121,7 @@ async function getKiwiPrices(origin: string, destination: string, startDate: str
       }
     }
   } catch (error) {
-    console.log(`❌ [KIWI] Error: ${error}`);
+    return null;
   }
   return null;
 }
@@ -167,8 +166,6 @@ export async function getFlightPricesWithAPIs(
   startDate: string, 
   endDate: string
 ): Promise<ScrapedFlightData> {
-  console.log(`\n🚀 [APIS] Iniciando búsqueda con APIs para ${origin} → ${destination}`);
-  
   try {
     // Intentar APIs en paralelo
     const [aviationStack, amadeus, kiwi] = await Promise.allSettled([
@@ -187,13 +184,10 @@ export async function getFlightPricesWithAPIs(
     
     if (aviationStack.status === 'fulfilled' && aviationStack.value) {
       skyscannerPrice = aviationStack.value;
-      console.log(`✅ [AVIATION STACK] Precio obtenido: ${skyscannerPrice.price}`);
     } else if (amadeus.status === 'fulfilled' && amadeus.value) {
       skyscannerPrice = amadeus.value;
-      console.log(`✅ [AMADEUS] Precio obtenido: ${skyscannerPrice.price}`);
     } else if (kiwi.status === 'fulfilled' && kiwi.value) {
       skyscannerPrice = kiwi.value;
-      console.log(`✅ [KIWI] Precio obtenido: ${skyscannerPrice.price}`);
     } else {
       // Generar precio simulado como fallback
       const basePrice = Math.floor(Math.random() * 200) + 100;
@@ -206,7 +200,6 @@ export async function getFlightPricesWithAPIs(
         url: googleFlights.url,
         source: 'simulated'
       };
-      console.log(`🎲 [SIMULATED] Precio generado: ${skyscannerPrice.price} (${skyscannerPrice.airline})`);
     }
 
     return {
@@ -221,7 +214,6 @@ export async function getFlightPricesWithAPIs(
     };
 
   } catch (error) {
-    console.error(`❌ [APIS] Error general:`, error);
     return {
       destination: {
         code: destination,
@@ -242,25 +234,15 @@ export async function getMultipleFlightPricesWithAPIs(
   startDate: string,
   endDate: string
 ): Promise<ScrapedFlightData[]> {
-  console.log(`\n🎯 [MULTI-APIS] Iniciando búsqueda múltiple con APIs`);
-  console.log(`📍 [ORIGEN] ${origin}`);
-  console.log(`🎯 [DESTINOS] ${destinations.length} destinos a procesar`);
-  
   const results: ScrapedFlightData[] = [];
   
   for (let i = 0; i < destinations.length; i++) {
     const destination = destinations[i];
-    console.log(`\n🔄 [PROCESO] ${i + 1}/${destinations.length} - Procesando ${destination.code}...`);
     
     const flightData = await getFlightPricesWithAPIs(origin, destination.code, startDate, endDate);
     flightData.destination = destination;
     results.push(flightData);
-    
-    console.log(`✅ [PROCESO] ${destination.code} completado`);
   }
-  
-  console.log(`\n🎉 [MULTI-APIS] Búsqueda múltiple completada`);
-  console.log(`📊 [RESUMEN] ${results.length} destinos procesados exitosamente`);
   
   return results;
 } 
